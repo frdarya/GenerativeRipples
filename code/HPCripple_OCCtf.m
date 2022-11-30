@@ -6,7 +6,7 @@ ft_defaults
 ft_hastoolbox('brewermap', 1);
 occ_gamma_range = [60, 160];
 
-load('HPCRipples/HPCAnterior_vaz_hpf200_25ms_16subjs_Jan22_reclean.mat')
+load('HPCRipples/HPCAnterior_vaz_hpf200_25ms_16subjs.mat')
 region = 'anterior'; baseline = 0; resp_lock = 0;
 nsubs = [3,6,8,9,13,15,16,22,25,31,32,36,37,6,8,10];
 hpc_nsubs = [3,6,8,9,13,15,16,22,25,31,32,36,37,6,8,10];

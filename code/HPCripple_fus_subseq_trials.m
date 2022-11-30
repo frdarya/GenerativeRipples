@@ -57,7 +57,7 @@ iszurich = logical([zeros(1,13),ones(1,3)]);
 patient_data = getMontage(nsubs,stp,0);
 hpfilt = 200;
 ripdur = 25;
-fname = sprintf('HPCRipples/HPCAnterior_vaz_hpf%d_%dms_%dsubjs_Jan22_reclean.mat',hpfilt, ripdur, numel(nsubs));
+fname = sprintf('HPCRipples/HPCAnterior_vaz_hpf%d_%dms_%dsubjs.mat',hpfilt, ripdur, numel(nsubs));
 load(fname)
 hpc = sub;
 

@@ -11,7 +11,7 @@ nsubs = [3,6,8,9,13,15,16,22,25,31,32,36,37,6,8,10];
 iszurich = logical([zeros(1,13),ones(1,3)]);
 hpfilt = 200;
 ripdur = 25;
-fname = sprintf('HPCRipples/HPCAnterior_vaz_hpf%d_%dms_%dsubjs_Jan22_reclean.mat',hpfilt, ripdur, numel(nsubs));
+fname = sprintf('HPCRipples/HPCAnterior_vaz_hpf%d_%dms_%dsubjs.mat',hpfilt, ripdur, numel(nsubs));
 load(fname)
 
 % create stp and patient_data structs

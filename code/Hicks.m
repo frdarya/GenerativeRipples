@@ -5,8 +5,8 @@
 % Darya Frank 21/02/2020
 
 clearvars
-subs = [3,6,8,9,13,15,25,16,31,32,36,37,6,8,10];
-iszurich = logical([zeros(1,12),ones(1,3)]);
+subs = [3,6,8,9,13,15,25,16,31,32,36,37,6,8,10,11,12];
+iszurich = logical([zeros(1,12),ones(1,5)]);
 
 d = dir();
 d = d(7:end);

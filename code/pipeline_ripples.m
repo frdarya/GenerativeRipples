@@ -1,14 +1,17 @@
-clearvars -except patient_data nsubs sub stp
+clearvars
 rng(111)
 region = 'anterior'; baseline = 0; resp_lock = 0;
-nsubs = [3,6,8,9,13,15,16,22,25,31,32,36,37,6,8,10];
-iszurich = logical([zeros(1,13),ones(1,3)]);
+nsubs = [3,6,8,9,13,15,16,22,25,31,32,36,37,6,8,10,11,12];
+iszurich = logical([zeros(1,13),ones(1,5)]);
+% nsubs = [3,6,8,9,13,15,16,22,25,31,32,36,37,6,8,10];
+% iszurich = logical([zeros(1,13),ones(1,3)]);
 % create stp and patient_data structs
 [~,stp] = setup(nsubs,iszurich,baseline,resp_lock,region);
 patient_data = getMontage(nsubs,stp,0);
 hpfilt = 200;
 ripdur = 25;
-fname = sprintf('HPCRipples/HPCAnterior_vaz_hpf%d_%dms_%dsubjs.mat',hpfilt, ripdur, numel(nsubs));
+% fname = sprintf('HPCRipples/HPCAnterior_vaz_hpf%d_%dms_%dsubjs_Jan22_reclean.mat',hpfilt, ripdur, numel(nsubs));
+fname = 'HPCAnterior_vaz_hpf200_25ms_18subjs_zurich_12zlen.mat'
 res = 300;
 
 load(fname)
@@ -93,7 +96,7 @@ for subI = 1:numel(nsubs)
     surp_rounded = 10*round(sub(subI).unique_rips(:,8),1);
     e1d= histogram(ent_rounded, 'BinEdges',[8:1:20]);
     subj_count_ent_rips(subI,1:12) = e1d.Values;
-    s1d=histogram(surp_rounded, 'BinEdges',[1:5:50]);
+    s1d=histogram(surp_rounded, 'BinEdges',[5:5:50]);
     
     subj_count_surp_rips(subI,1:9) = s1d.Values;
     if nsubs(subI) == 22
@@ -105,7 +108,7 @@ for subI = 1:numel(nsubs)
     surp_trls = 10*round(clean_trials(subI).info(:,2),1);
     c1d = histogram(ent_trls, 'BinEdges', [8:1:20]);
     count_ent_trls = c1d.Values;
-    cs1d  =histogram(surp_trls, 'BinEdges', [1:5:50]);
+    cs1d  =histogram(surp_trls, 'BinEdges', [5:5:50]);
     count_surp_trls = cs1d.Values;
     subj_tot_ent(subI,:) = count_ent_trls;
     subj_tot_surp(subI,:) = count_surp_trls;
@@ -115,7 +118,7 @@ for subI = 1:numel(nsubs)
     subj_surp_bins(subI,:) = subj_count_surp_rips(subI,:) ./ count_surp_trls;
     marks = find(isnan(subj_ent_bins(subI,:)));
     
-    figure(2);subplot(4,4,subI);
+    figure(2);subplot(5,4,subI);
     bar([0.9:0.1:2],subj_ent_bins(subI,:));
     xlabel('Entropy');
     title(sprintf('patient %d',nsubs(subI)));
@@ -139,7 +142,7 @@ for subI = 1:numel(nsubs)
     c=histogram2(rip_time,ent_rounded,'XBinEdges',[-1000:200:1000],'YBinEdges',[8:1:20]); % if want prob add 'Normalization','Probability', otherwise it's normalized count
     xlabel('Ripple peak time'); ylabel('Entropy'); zlabel('Count');title('Raw count')
     ent_time_hist = c.Values;
-    cs=histogram2(rip_time,surp_rounded,'XBinEdges',[-1000:200:1000],'YBinEdges',[1:5:50]); % if want prob add 'Normalization','Probability', otherwise it's normalized count
+    cs=histogram2(rip_time,surp_rounded,'XBinEdges',[-1000:200:1000],'YBinEdges',[5:5:50]); % if want prob add 'Normalization','Probability', otherwise it's normalized count
     xlabel('Ripple peak time'); ylabel('Surprise'); zlabel('Count');title('Raw count')
     surp_time_hist = cs.Values;
     %     prop_ent_time_hist = ent_time_hist ./ sum(sum(ent_time_hist)); % convert to prob to avoid issues with different numbers of trials
@@ -191,7 +194,7 @@ figure( 'position',[10 10 500 400]); h1=heatmap(group_avg_ent_time'); %title({'G
 ylabel('Entropy'); xlabel('Ripple peak time');
 h1.XDisplayLabels = xtick; h1.YDisplayLabels = ytick; h1.FontSize = 20;
 h1.CellLabelColor='none'; h1.NodeChildren(3).YDir='normal';h1.Colormap = parula;
- print('-dsvg',fullfile('Manuscript/Figures/','normalised_rip_ent_time'),['-r' num2str(res)])
+%  print('-dsvg',fullfile('Manuscript/Figures/','normalised_rip_ent_time'),['-r' num2str(res)])
 
 % raw
 group_avg_ent_time_r = nanmean(ent_rip_3d,3);
@@ -299,7 +302,17 @@ for subI = 1:numel(nsubs)
         count_ent_trls(subI,1)=NaN;
     end
 
+        c1d = histogram(blkI, 'BinEdges', [1:41]);%,
+    count_trls(subI,:) = c1d.Values;
     
+    % to get this in rip rate - divide by the duration of trial * number of
+    % trials that were used (post-cleaning)
+    for i = 1:40
+        tot_trls = sum(clean_trials(subI).info(:,6) == i);
+        tot_trls_time = tot_trls * 2; %2s trl
+        trl_rate(subI,i) = ( count_trls(subI,i) / tot_trls_time); %events/s
+        rip_per_trls(subI,i) = count_trls(subI,i) / tot_trls;
+    end
 end
 % fit exponential learning curve
 % https://people.richland.edu/james/lecture/m116/logs/models.html
@@ -309,6 +322,21 @@ g = fittype('b*(1-exp(-c*x))');
 figure( 'position',[10 10 900 700]);plot(f_exp,x,nanmean(count_ent_trls)');
 xlabel('Trial # of block'); ylabel('p(ripple)');text(31,0.03,sprintf('adjusted R^2 = %.2f',gof.adjrsquare))
 set(gca, 'FontSize', 20,'LineWidth',2);
+
+
+
+err = nanstd(trl_rate) / sqrt(numel(nsubs) - 2);
+n_trials = size(trl_rate, 2);
+trial_mean = nanmean(trl_rate);
+
+% Mean + error bars on top
+
+scatter(1:n_trials, trial_mean);
+hold on;
+errorbar(1:n_trials, trial_mean, err);
+hold off;
+
+
 
 
 [f_lin, gof_lin] = fit(x,nanmean(count_ent_trls)','poly2');
